@@ -1,0 +1,184 @@
+/* ============================================================
+   设计系统：统一的色彩 / 间距 / 圆角 / 阴影 / 动效
+   目标：让每个智能体页面在视觉上一致且精致
+   ============================================================ */
+:root {
+  /* ---- 品牌色 ---- */
+  --primary: #4f6ef7;
+  --primary-light: #7c5cf0;
+  --primary-dark: #3a56d4;
+  --primary-gradient: linear-gradient(135deg, #4f6ef7, #7c5cf0);
+  --primary-soft: rgba(79, 110, 247, 0.1);
+  --primary-softer: rgba(79, 110, 247, 0.06);
+
+  /* ---- 语义色 ---- */
+  --success: #34c38f;
+  --success-soft: rgba(52, 195, 143, 0.12);
+  --warning: #f1b44c;
+  --warning-soft: rgba(241, 180, 76, 0.14);
+  --danger: #f46a6a;
+  --danger-soft: rgba(244, 106, 106, 0.12);
+  --info: #50a5f1;
+  --info-soft: rgba(80, 165, 241, 0.12);
+
+  /* ---- 中性色 ---- */
+  --bg: #f5f6fa;
+  --bg-elevated: #ffffff;
+  --bg-subtle: #fafbfc;
+  --card-bg: #ffffff;
+  --text: #1f2937;
+  --text-secondary: #6b7280;
+  --text-muted: #9ca3af;
+  --border: #e8eaed;
+  --border-light: #f0f1f3;
+  --sidebar-bg: #1a1a2e;
+  --sidebar-hover: rgba(79, 110, 247, 0.15);
+
+  /* ---- 圆角：统一分级 ---- */
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+  --radius-full: 999px;
+
+  /* ---- 间距：8px 基准 ---- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+
+  /* ---- 阴影：分层，越往上越轻 ---- */
+  --shadow-xs: 0 1px 2px rgba(16, 24, 40, 0.04);
+  --shadow-sm: 0 1px 3px rgba(16, 24, 40, 0.06), 0 1px 2px rgba(16, 24, 40, 0.04);
+  --shadow-md: 0 4px 8px rgba(16, 24, 40, 0.05), 0 2px 4px rgba(16, 24, 40, 0.04);
+  --shadow-lg: 0 12px 24px rgba(16, 24, 40, 0.08), 0 4px 8px rgba(16, 24, 40, 0.04);
+  --shadow-glow: 0 8px 24px rgba(79, 110, 247, 0.18);
+
+  /* ---- 动效：统一时长与曲线 ---- */
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration-fast: 0.15s;
+  --duration: 0.22s;
+  --duration-slow: 0.35s;
+
+  /* ---- 层级 ---- */
+  --z-sticky: 10;
+  --z-overlay: 100;
+  --z-modal: 200;
+  --z-toast: 300;
+
+  /* ---- 字体 ---- */
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC',
+    'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  --font-mono: 'SF Mono', Menlo, Consolas, 'Courier New', monospace;
+}
+
+/* ============================================================
+   通用组件类：智能体页面统一复用，保证观感一致
+   ============================================================ */
+
+/* 卡片：白底 + 细边 + 轻阴影 */
+.ds-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--duration) var(--ease), transform var(--duration) var(--ease);
+}
+
+.ds-card--hover:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+/* 分区标题 */
+.ds-section-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: var(--space-3);
+}
+
+/* 渐变图标底座：智能体/类型的视觉锚点 */
+.ds-icon-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  background: var(--primary-gradient);
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.ds-icon-badge--lg { width: 48px; height: 48px; font-size: 24px; border-radius: var(--radius-lg); }
+.ds-icon-badge--md { width: 36px; height: 36px; font-size: 18px; }
+.ds-icon-badge--sm { width: 28px; height: 28px; font-size: 14px; border-radius: var(--radius-sm); }
+
+/* 空状态容器 */
+.ds-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-10) var(--space-6);
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.ds-empty__icon { font-size: 44px; opacity: 0.5; }
+.ds-empty__title { font-size: 14px; color: var(--text-secondary); }
+.ds-empty__hint { font-size: 12px; color: var(--text-muted); }
+
+/* 顶部页头：智能体工作台通用 */
+.ds-page-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-6);
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border-light);
+}
+
+/* 骨架屏占位 */
+.ds-skeleton {
+  padding: var(--space-6);
+}
+
+/* 滚动条：细且柔和 */
+.ds-scroll {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db transparent;
+}
+
+.ds-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+.ds-scroll::-webkit-scrollbar-track { background: transparent; }
+.ds-scroll::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+.ds-scroll::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+
+/* 渐入动画：页面/面板切换时用 */
+@keyframes ds-fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.ds-fade-in {
+  animation: ds-fade-in var(--duration) var(--ease);
+}
+
+/* 脉冲：加载态 */
+@keyframes ds-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+.ds-pulse { animation: ds-pulse 1.4s ease-in-out infinite; }

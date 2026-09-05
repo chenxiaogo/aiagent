@@ -1,0 +1,1 @@
+import{P as o}from"./index-CzmDpm80.js";function i(e){const t=e?{modelType:e}:{};return o.get("/model-configs",{params:t})}function f(e){return o.post("/model-configs",e)}function r(e,t){return o.put(`/model-configs/${e}`,t)}function s(e){return o.delete(`/model-configs/${e}`)}function a(e){return o.put(`/model-configs/${e}/activate`)}export{a,f as c,s as d,i as g,r as u};

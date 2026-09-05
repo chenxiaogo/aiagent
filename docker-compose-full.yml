@@ -1,0 +1,113 @@
+# AI Agent 平台完整部署：PostgreSQL+pgvector 向量库 / Go 后端 / Nginx 网关（前端静态 + API 反向代理）
+#
+# 使用：
+#   cp .env.example .env   # 按需修改（生产环境务必修改 JWT_SECRET）
+#   docker compose -f docker-compose-full.yml up -d --build
+#   或 make up
+#
+# 访问：
+#   前端 http://localhost:${WEB_PORT:-80}（默认账号 admin / admin123）
+#   后端健康检查 http://localhost:8080/api/health
+#   MCP SSE   http://localhost/api/mcp/sse
+#
+# 数据目录（宿主机 ./data/ 下，make init 自动创建）：
+#   data/postgres_data    PostgreSQL 数据（容器内 postgres 用户 uid=999）
+#   data/server_uploads   上传文件
+#   data/server_logs      应用日志
+
+services:
+  # ---------- PostgreSQL + pgvector 向量数据库 ----------
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: aiagent-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: aiagent
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - ./data/postgres_data:/var/lib/postgresql/data
+      # 时区跟随宿主机
+      - /etc/localtime:/etc/localtime:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d aiagent"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      aiagent-network:
+        # 固定容器 IPv4：postgres = 172.39.0.10
+        ipv4_address: 172.39.0.10
+
+  # ---------- Go 后端 ----------
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: aiagent-server
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # 应用运行环境（dev / production）
+      AIAGENT_APP_ENV: ${APP_ENV:-production}
+      # 数据库：走 compose 网络内服务名 postgres，密码与 .env 对齐（时区跟随宿主机）
+      AIAGENT_DATABASE_DSN: "host=postgres user=postgres password=${DB_PASSWORD:-postgres} dbname=aiagent port=5432 sslmode=disable"
+      # 安全 / 观测：与 .env 对齐（viper 前缀 AIAGENT，key 的点转下划线）
+      AIAGENT_SECURITY_JWTSECRET: ${JWT_SECRET:-aiagent-secret-key-change-me-in-production}
+      AIAGENT_SECURITY_TOKENEXPIREHOURS: ${TOKEN_EXPIRE_HOURS:-24}
+      AIAGENT_OBSERVABILITY_LOGEMBEDDING: ${LOG_EMBEDDING:-false}
+    ports:
+      # 容器内固定 8080（nginx 网关按 server:8080 代理，勿改容器端端口）
+      - "${SERVER_PORT:-8080}:8080"
+    volumes:
+      - ./data/server_uploads:/app/uploads
+      - ./data/server_logs:/app/logs
+      - ./data/server_data:/app/data
+      # 时区跟随宿主机
+      - /etc/localtime:/etc/localtime:ro
+    # web 以 service_healthy 依赖 server，这里必须定义 healthcheck
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/api/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      retries: 3
+    networks:
+      aiagent-network:
+        # 固定容器 IPv4：server = 172.39.0.11
+        ipv4_address: 172.39.0.11
+
+  # ---------- Nginx 网关（前端静态资源 + /api 反向代理 + MCP SSE） ----------
+  # 镜像由 web/Dockerfile 构建：Vue3 产物 + nginx.conf（见 web/nginx.conf）
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: aiagent-web
+    restart: unless-stopped
+    depends_on:
+      server:
+        condition: service_healthy
+    ports:
+      - "${WEB_PORT:-80}:80"
+    volumes:
+      # 时区跟随宿主机
+      - /etc/localtime:/etc/localtime:ro
+    networks:
+      aiagent-network:
+        # 固定容器 IPv4：web = 172.39.0.16
+        ipv4_address: 172.39.0.16
+
+networks:
+  # 固定子网 + 网关，避免与宿主机/其它 compose 项目网段冲突（如需更换改 subnet 即可）
+  aiagent-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.39.0.0/16
+          gateway: 172.39.0.1

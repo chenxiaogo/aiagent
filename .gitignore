@@ -1,0 +1,23 @@
+# 调试二进制
+server/cmd/__debug_bin*
+server/cmd/__debug_bin.exe
+
+# 运行时产物
+server/uploads/
+server/logs/
+server/vendor/
+
+# 前端
+web/node_modules/
+web/dist
+node_modules/
+
+# 数据与密钥
+data/
+.env
+!.env.example
+
+# 本地/编辑器
+.codebuddy/
+.vscode/
+.DS_Store

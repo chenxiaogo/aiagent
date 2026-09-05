@@ -1,0 +1,12 @@
+# 本地运行产物，不进入镜像
+logs/
+uploads/
+data/
+tmp_diag/
+tests/
+reembed
+
+# 版本控制与文档
+.git
+.gitignore
+README.md

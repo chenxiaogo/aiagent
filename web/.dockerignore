@@ -1,0 +1,8 @@
+# 依赖与构建产物（构建阶段生成）
+node_modules
+dist
+
+# 版本控制
+.git
+.gitignore
+README.md
